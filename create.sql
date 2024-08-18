@@ -1,0 +1,17 @@
+CREATE DATABASE IF NOT EXISTS cartences;
+
+USE cartences;
+
+CREATE TABLE IF NOT EXISTS sentences (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    category VARCHAR(255) NOT NULL,
+    from_source VARCHAR(255),
+    from_author VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    length INT NOT NULL
+);
+
+ALTER TABLE sentences MODIFY COLUMN created_at DATETIME;
+ALTER TABLE sentences MODIFY created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL;

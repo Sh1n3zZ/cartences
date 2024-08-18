@@ -1,32 +1,7 @@
-# Prerequisites
-*.d
+# Added by cargo
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+/target
 
-# Precompiled Headers
-*.gch
-*.pch
+# Database config
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+config.toml
