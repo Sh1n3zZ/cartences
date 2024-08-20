@@ -5,21 +5,28 @@ use std::convert::Infallible;
 use sqlx::MySql;
 use sqlx::Pool;
 use uuid::Uuid;
+use crate::auth::jwt::Claims;
 use crate::models::newsentences::NewSentence;
+use crate::router::cartences::with_db;
+use crate::auth::role::decode_jwt_and_check_role;
 
 pub fn create_route(pool: Pool<MySql>) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     warp::path!("create")
         .and(warp::post())
+        .and(warp::header::<String>("authorization"))
+        .and(with_db(pool.clone()))
+        .and_then(move |token: String, pool: Pool<MySql>| {
+            let pool_clone = pool.clone();
+            async move {
+                decode_jwt_and_check_role(&token, &pool_clone).await
+            }
+        })
         .and(warp::body::json())
         .and(with_db(pool))
         .and_then(handle_create_sentence)
 }
 
-fn with_db(pool: Pool<MySql>) -> impl Filter<Extract = (Pool<MySql>,), Error = Infallible> + Clone {
-    warp::any().map(move || pool.clone())
-}
-
-async fn handle_create_sentence(new_sentence: NewSentence, pool: Pool<MySql>) -> Result<impl warp::Reply, Infallible> {
+async fn handle_create_sentence(_claims: Claims, new_sentence: NewSentence, pool: Pool<MySql>) -> Result<impl warp::Reply, Infallible> {
     let uuid = Uuid::new_v4().to_string();
     let length = new_sentence.content.chars().count();  
 

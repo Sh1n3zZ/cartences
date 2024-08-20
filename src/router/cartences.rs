@@ -14,7 +14,7 @@ pub fn hitokoto_route(pool: Pool<MySql>) -> impl Filter<Extract = impl warp::Rep
         .with(warp::log("cartences"))
 }
 
-fn with_db(pool: Pool<MySql>) -> impl Filter<Extract = (Pool<MySql>,), Error = Infallible> + Clone {
+pub fn with_db(pool: Pool<MySql>) -> impl Filter<Extract = (Pool<MySql>,), Error = Infallible> + Clone {
     warp::any().map(move || pool.clone())
 }
 

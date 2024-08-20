@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 
 #[derive(Serialize, Deserialize, FromRow)]
 pub struct Sentence {
@@ -12,6 +12,6 @@ pub struct Sentence {
     pub category: Option<String>,
     pub from_source: Option<String>,
     pub from_author: Option<String>,
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
     pub length: i32,
 }
