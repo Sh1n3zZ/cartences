@@ -2,6 +2,7 @@ use std::env;
 use log::info;
 use env_logger;
 use warp::Filter;
+use crate::auth::role::handle_rejection;
 use crate::database::connection::establish_connection;
 use router::{cartences::hitokoto_route, create::create_route};
 
@@ -23,7 +24,8 @@ async fn main() {
         .or(create_route(pool.clone()))
         .with(warp::log("cartences"));
 
-    let routes_manager = create_route(pool.clone());
+    let routes_manager = create_route(pool.clone())
+        .recover(handle_rejection);
 
     let routes_auth = router::jwt::register(pool.clone())
         .or(router::jwt::login(pool.clone()))

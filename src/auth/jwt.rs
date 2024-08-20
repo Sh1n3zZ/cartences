@@ -10,7 +10,7 @@ pub struct Claims {
     aud: String,
     iat: usize,
     nbf: usize,
-    role: String,
+    pub role: String,
     username: String,
 }
 
