@@ -2,7 +2,7 @@ use jsonwebtoken::{decode, DecodingKey, Validation};
 use warp::{http::StatusCode, Rejection, reply::json, reply::with_status};
 use serde::Serialize;
 use crate::auth::jwt::Claims;
-use crate::auth::jwt::SECRET;
+use crate::auth::jwtcfg::SECRET;
 use sqlx::MySql;
 use sqlx::Pool;
 
@@ -46,12 +46,13 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl warp::Reply, warp::
     }
 }
 
-pub async fn decode_jwt_and_check_role(auth_header: &str, _pool: &Pool<MySql>) -> Result<Claims, warp::Rejection> {
+pub async fn decode_jwt_and_check_role(auth_header: &str, pool: &Pool<MySql>) -> Result<Claims, warp::Rejection> {
     let token = auth_header.strip_prefix("Bearer ").unwrap_or(auth_header);
 
+    // Decode the token
     let claims = match decode::<Claims>(
         token,
-        &DecodingKey::from_secret(SECRET),
+        &DecodingKey::from_secret(SECRET.as_bytes()),
         &Validation::default(),
     ) {
         Ok(token_data) => token_data.claims,
@@ -62,13 +63,27 @@ pub async fn decode_jwt_and_check_role(auth_header: &str, _pool: &Pool<MySql>) -
         }
     };
 
-    // 假设有其他逻辑检查角色
-    if claims.role != "manager" {
+    // Fetch user role from the database using `sub` (user id)
+    let role_result: Result<(String,), _> = sqlx::query_as("SELECT role FROM users WHERE id = ?")
+        .bind(&claims.sub)
+        .fetch_one(pool)
+        .await;
+
+    let role = match role_result {
+        Ok(row) => row.0,
+        Err(_) => {
+            return Err(warp::reject::custom(CustomError::AuthError(
+                "Failed to fetch user role".into(),
+            )));
+        }
+    };
+
+    // Check if the user role is 'manager'
+    if role != "manager" {
         return Err(warp::reject::custom(CustomError::AuthError(
-            format!("User role check failed: expected 'manager', got '{}'", claims.role),
+            format!("User role check failed: expected 'manager', got '{}'", role),
         )));
     }
 
     Ok(claims)
 }
-

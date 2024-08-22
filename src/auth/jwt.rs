@@ -2,6 +2,7 @@ use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation}
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 use warp::reject::Reject;
+use crate::auth::jwtcfg::SECRET;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -18,8 +19,6 @@ pub struct Claims {
 pub struct AuthError;
 
 impl Reject for AuthError {}
-
-pub const SECRET: &[u8] = b"lbw_JinZhiawa233";
 
 pub fn create_jwt(user_id: i64, username: &str, role: &str) -> Result<String, warp::Rejection> {
     let expiration = SystemTime::now()
@@ -46,7 +45,7 @@ pub fn create_jwt(user_id: i64, username: &str, role: &str) -> Result<String, wa
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(SECRET),
+        &EncodingKey::from_secret(SECRET.as_bytes()),
     )
     .map_err(|_| warp::reject::custom(AuthError))
 }
@@ -54,7 +53,7 @@ pub fn create_jwt(user_id: i64, username: &str, role: &str) -> Result<String, wa
 pub fn decode_jwt(token: &str) -> Result<Claims, warp::Rejection> {
     decode::<Claims>(
         token,
-        &DecodingKey::from_secret(SECRET),
+        &DecodingKey::from_secret(SECRET.as_bytes()),
         &Validation::default(),
     )
     .map(|data| data.claims)
